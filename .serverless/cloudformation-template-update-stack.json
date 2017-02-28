@@ -11,12 +11,6 @@
         "LogGroupName": "/aws/lambda/aws-nodejs-dev-webhookAuthorization"
       }
     },
-    "WebhookLogGroup": {
-      "Type": "AWS::Logs::LogGroup",
-      "Properties": {
-        "LogGroupName": "/aws/lambda/aws-nodejs-dev-webhook"
-      }
-    },
     "IamRoleLambdaExecution": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -89,20 +83,6 @@
                       "*"
                     ]
                   ]
-                },
-                {
-                  "Fn::Join": [
-                    ":",
-                    [
-                      {
-                        "Fn::GetAtt": [
-                          "WebhookLogGroup",
-                          "Arn"
-                        ]
-                      },
-                      "*"
-                    ]
-                  ]
                 }
               ]
             }
@@ -122,7 +102,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/aws-nodejs/dev/1488220882625-2017-02-27T18:41:22.625Z/aws-nodejs.zip"
+          "S3Key": "serverless/aws-nodejs/dev/1488258844894-2017-02-28T05:14:04.894Z/aws-nodejs.zip"
         },
         "FunctionName": "aws-nodejs-dev-webhookAuthorization",
         "Handler": "handler.authorization",
@@ -141,50 +121,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "WebhookAuthorizationLambdaVersionMDlCy4Fx7SqOs3D8GV9SGABrVbWVDGTOzoOrsmCMVE": {
+    "WebhookAuthorizationLambdaVersion9nlxrIvq5VJV2RmTc4S6ATfHgOqzlBsNUtl8caIqgKk": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "WebhookAuthorizationLambdaFunction"
         },
-        "CodeSha256": "MDlCy4Fx7SqOs3D8GV9SGABrVb/WVDGTOzoOrsmCMVE="
-      }
-    },
-    "WebhookLambdaFunction": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Ref": "ServerlessDeploymentBucket"
-          },
-          "S3Key": "serverless/aws-nodejs/dev/1488220882625-2017-02-27T18:41:22.625Z/aws-nodejs.zip"
-        },
-        "FunctionName": "aws-nodejs-dev-webhook",
-        "Handler": "webhook.execute",
-        "MemorySize": 1024,
-        "Role": {
-          "Fn::GetAtt": [
-            "IamRoleLambdaExecution",
-            "Arn"
-          ]
-        },
-        "Runtime": "nodejs4.3",
-        "Timeout": 6
-      },
-      "DependsOn": [
-        "IamPolicyLambdaExecution",
-        "IamRoleLambdaExecution"
-      ]
-    },
-    "WebhookLambdaVersionMDlCy4Fx7SqOs3D8GV9SGABrVbWVDGTOzoOrsmCMVE": {
-      "Type": "AWS::Lambda::Version",
-      "DeletionPolicy": "Retain",
-      "Properties": {
-        "FunctionName": {
-          "Ref": "WebhookLambdaFunction"
-        },
-        "CodeSha256": "MDlCy4Fx7SqOs3D8GV9SGABrVb/WVDGTOzoOrsmCMVE="
+        "CodeSha256": "9nlxrIvq5VJV2RmTc4S6ATfHgOqzlBsNUtl8caIqgKk="
       }
     },
     "ApiGatewayRestApi": {
@@ -246,45 +190,7 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayMethodWebhookPost": {
-      "Type": "AWS::ApiGateway::Method",
-      "Properties": {
-        "HttpMethod": "POST",
-        "RequestParameters": {},
-        "ResourceId": {
-          "Ref": "ApiGatewayResourceWebhook"
-        },
-        "RestApiId": {
-          "Ref": "ApiGatewayRestApi"
-        },
-        "AuthorizationType": "NONE",
-        "Integration": {
-          "IntegrationHttpMethod": "POST",
-          "Type": "AWS_PROXY",
-          "Uri": {
-            "Fn::Join": [
-              "",
-              [
-                "arn:aws:apigateway:",
-                {
-                  "Ref": "AWS::Region"
-                },
-                ":lambda:path/2015-03-31/functions/",
-                {
-                  "Fn::GetAtt": [
-                    "WebhookLambdaFunction",
-                    "Arn"
-                  ]
-                },
-                "/invocations"
-              ]
-            ]
-          }
-        },
-        "MethodResponses": []
-      }
-    },
-    "ApiGatewayDeployment1488220882635": {
+    "ApiGatewayDeployment1488258845032": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -293,8 +199,7 @@
         "StageName": "dev"
       },
       "DependsOn": [
-        "ApiGatewayMethodWebhookGet",
-        "ApiGatewayMethodWebhookPost"
+        "ApiGatewayMethodWebhookGet"
       ]
     },
     "WebhookAuthorizationLambdaPermissionApiGateway": {
@@ -303,39 +208,6 @@
         "FunctionName": {
           "Fn::GetAtt": [
             "WebhookAuthorizationLambdaFunction",
-            "Arn"
-          ]
-        },
-        "Action": "lambda:InvokeFunction",
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Join": [
-            "",
-            [
-              "arn:aws:execute-api:",
-              {
-                "Ref": "AWS::Region"
-              },
-              ":",
-              {
-                "Ref": "AWS::AccountId"
-              },
-              ":",
-              {
-                "Ref": "ApiGatewayRestApi"
-              },
-              "/*/*"
-            ]
-          ]
-        }
-      }
-    },
-    "WebhookLambdaPermissionApiGateway": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "WebhookLambdaFunction",
             "Arn"
           ]
         },
@@ -373,13 +245,7 @@
     "WebhookAuthorizationLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "WebhookAuthorizationLambdaVersionMDlCy4Fx7SqOs3D8GV9SGABrVbWVDGTOzoOrsmCMVE"
-      }
-    },
-    "WebhookLambdaFunctionQualifiedArn": {
-      "Description": "Current Lambda function version",
-      "Value": {
-        "Ref": "WebhookLambdaVersionMDlCy4Fx7SqOs3D8GV9SGABrVbWVDGTOzoOrsmCMVE"
+        "Ref": "WebhookAuthorizationLambdaVersion9nlxrIvq5VJV2RmTc4S6ATfHgOqzlBsNUtl8caIqgKk"
       }
     },
     "ServiceEndpoint": {
