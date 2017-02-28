@@ -11,6 +11,12 @@
         "LogGroupName": "/aws/lambda/aws-nodejs-dev-webhookAuthorization"
       }
     },
+    "WebhookExecuteLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/aws-nodejs-dev-webhookExecute"
+      }
+    },
     "IamRoleLambdaExecution": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -83,6 +89,20 @@
                       "*"
                     ]
                   ]
+                },
+                {
+                  "Fn::Join": [
+                    ":",
+                    [
+                      {
+                        "Fn::GetAtt": [
+                          "WebhookExecuteLogGroup",
+                          "Arn"
+                        ]
+                      },
+                      "*"
+                    ]
+                  ]
                 }
               ]
             }
@@ -102,7 +122,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/aws-nodejs/dev/1488258844894-2017-02-28T05:14:04.894Z/aws-nodejs.zip"
+          "S3Key": "serverless/aws-nodejs/dev/1488261399494-2017-02-28T05:56:39.494Z/aws-nodejs.zip"
         },
         "FunctionName": "aws-nodejs-dev-webhookAuthorization",
         "Handler": "handler.authorization",
@@ -121,14 +141,50 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "WebhookAuthorizationLambdaVersion9nlxrIvq5VJV2RmTc4S6ATfHgOqzlBsNUtl8caIqgKk": {
+    "WebhookAuthorizationLambdaVersionbvrpUFBzJktWOTaR1fK7VYiHuz9wFWjl3sZFWt7MP4": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "WebhookAuthorizationLambdaFunction"
         },
-        "CodeSha256": "9nlxrIvq5VJV2RmTc4S6ATfHgOqzlBsNUtl8caIqgKk="
+        "CodeSha256": "bvrpUFBzJktWOTaR1fK7VYiHuz9wFWj/l3sZFWt7MP4="
+      }
+    },
+    "WebhookExecuteLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/aws-nodejs/dev/1488261399494-2017-02-28T05:56:39.494Z/aws-nodejs.zip"
+        },
+        "FunctionName": "aws-nodejs-dev-webhookExecute",
+        "Handler": "webhook.execute",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs4.3",
+        "Timeout": 6
+      },
+      "DependsOn": [
+        "IamPolicyLambdaExecution",
+        "IamRoleLambdaExecution"
+      ]
+    },
+    "WebhookExecuteLambdaVersionbvrpUFBzJktWOTaR1fK7VYiHuz9wFWjl3sZFWt7MP4": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "WebhookExecuteLambdaFunction"
+        },
+        "CodeSha256": "bvrpUFBzJktWOTaR1fK7VYiHuz9wFWj/l3sZFWt7MP4="
       }
     },
     "ApiGatewayRestApi": {
@@ -190,7 +246,45 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayDeployment1488258845032": {
+    "ApiGatewayMethodWebhookPost": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "POST",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceWebhook"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "WebhookExecuteLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      }
+    },
+    "ApiGatewayDeployment1488261399515": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -199,7 +293,8 @@
         "StageName": "dev"
       },
       "DependsOn": [
-        "ApiGatewayMethodWebhookGet"
+        "ApiGatewayMethodWebhookGet",
+        "ApiGatewayMethodWebhookPost"
       ]
     },
     "WebhookAuthorizationLambdaPermissionApiGateway": {
@@ -208,6 +303,39 @@
         "FunctionName": {
           "Fn::GetAtt": [
             "WebhookAuthorizationLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "/*/*"
+            ]
+          ]
+        }
+      }
+    },
+    "WebhookExecuteLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "WebhookExecuteLambdaFunction",
             "Arn"
           ]
         },
@@ -245,7 +373,13 @@
     "WebhookAuthorizationLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "WebhookAuthorizationLambdaVersion9nlxrIvq5VJV2RmTc4S6ATfHgOqzlBsNUtl8caIqgKk"
+        "Ref": "WebhookAuthorizationLambdaVersionbvrpUFBzJktWOTaR1fK7VYiHuz9wFWjl3sZFWt7MP4"
+      }
+    },
+    "WebhookExecuteLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "WebhookExecuteLambdaVersionbvrpUFBzJktWOTaR1fK7VYiHuz9wFWjl3sZFWt7MP4"
       }
     },
     "ServiceEndpoint": {
